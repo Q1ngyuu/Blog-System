@@ -1,18 +1,25 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useState, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getPost, type PostDetail } from "@/lib/api";
 
-export default function PostDetailPage() {
-  const { id } = useParams<{ id: string }>();
+function PostContent() {
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
+
   const [post, setPost] = useState<PostDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchPost = useCallback(async () => {
+    if (!id) {
+      setNotFound(true);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     setNotFound(false);
@@ -35,7 +42,6 @@ export default function PostDetailPage() {
     fetchPost();
   }, [fetchPost]);
 
-  // --- 404 ---
   if (!loading && notFound) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4">
@@ -51,7 +57,6 @@ export default function PostDetailPage() {
     );
   }
 
-  // --- Error ---
   if (!loading && error) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4">
@@ -66,7 +71,6 @@ export default function PostDetailPage() {
     );
   }
 
-  // --- Loading ---
   if (loading) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-10">
@@ -88,17 +92,13 @@ export default function PostDetailPage() {
     );
   }
 
-  // --- Success ---
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="mx-auto max-w-3xl px-4 py-10">
         <article className="rounded-xl border bg-white p-8 shadow-sm">
-          {/* Title */}
           <h1 className="mb-4 text-3xl font-bold text-gray-900">
             {post!.title}
           </h1>
-
-          {/* Meta */}
           <div className="mb-8 flex flex-wrap items-center gap-3 text-sm text-gray-400">
             {post!.category_name && (
               <span className="rounded-full bg-blue-50 px-3 py-0.5 font-medium text-blue-600">
@@ -113,14 +113,10 @@ export default function PostDetailPage() {
               })}
             </span>
           </div>
-
-          {/* Content */}
           <div className="prose prose-gray max-w-none leading-relaxed text-gray-700 whitespace-pre-wrap">
             {post!.content}
           </div>
         </article>
-
-        {/* Back button */}
         <div className="mt-8 text-center">
           <Link
             href="/"
@@ -131,5 +127,22 @@ export default function PostDetailPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function PostPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-3xl px-4 py-10">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 w-2/3 rounded bg-gray-200" />
+            <div className="h-4 w-full rounded bg-gray-100" />
+          </div>
+        </div>
+      }
+    >
+      <PostContent />
+    </Suspense>
   );
 }

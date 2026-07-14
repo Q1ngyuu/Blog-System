@@ -6,4 +6,5 @@ __pycache__/
 .next/
 dist/
 venv/
+frontend/out/
 .DS_Store
