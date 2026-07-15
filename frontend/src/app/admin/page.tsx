@@ -17,6 +17,7 @@ import {
 } from "@/lib/api";
 import EmptyState from "@/components/EmptyState";
 import SkeletonCard from "@/components/SkeletonCard";
+import toast from "react-hot-toast";
 
 // ── Schema ──
 
@@ -108,7 +109,7 @@ export default function AdminPage() {
       });
       setModalOpen(true);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to load post");
+      toast.error("加载文章失败，请重试");
     }
   };
 
@@ -129,8 +130,9 @@ export default function AdminPage() {
       }
       closeModal();
       await fetchData();
+      toast.success(editingId ? "文章已更新！" : "文章发布成功！");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Operation failed");
+      toast.error("操作失败，请重试");
     } finally {
       setSubmitting(false);
     }
@@ -144,8 +146,9 @@ export default function AdminPage() {
       await deletePost(deleteTarget.id);
       setDeleteTarget(null);
       await fetchData();
+      toast.success("文章已删除");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Delete failed");
+      toast.error("删除失败，请重试");
     } finally {
       setDeleting(false);
     }
