@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
 import { getPost, type PostDetail } from "@/lib/api";
 
 export default function PostDetailPage() {
@@ -12,6 +13,23 @@ export default function PostDetailPage() {
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // ── Reading progress ──
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      const docHeight =
+        document.documentElement.scrollHeight - window.innerHeight;
+      if (docHeight > 0) {
+        setProgress(Math.min((scrollTop / docHeight) * 100, 100));
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // ── Fetch post ──
   const fetchPost = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -40,11 +58,11 @@ export default function PostDetailPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4">
         <span className="text-7xl">🔍</span>
-        <h1 className="text-2xl font-bold text-gray-400">404</h1>
+        <h1 className="text-2xl font-bold text-gray-300">404</h1>
         <p className="text-gray-500">文章不存在或已被删除</p>
         <Link
           href="/"
-          className="mt-4 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-md shadow-indigo-500/25 transition-all duration-300 hover:from-indigo-700 hover:to-blue-700 hover:shadow-lg hover:scale-105"
+          className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-md shadow-indigo-500/25 transition-all duration-300 hover:from-indigo-700 hover:to-blue-700 hover:shadow-lg hover:scale-105"
         >
           ← 返回首页
         </Link>
@@ -71,7 +89,6 @@ export default function PostDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen">
-        {/* Navbar skeleton */}
         <header className="sticky top-0 z-10 border-b border-indigo-100/60 bg-white/75 shadow-sm backdrop-blur-xl">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5">
             <div className="flex items-center gap-2.5">
@@ -83,12 +100,13 @@ export default function PostDetailPage() {
         </header>
         <main className="mx-auto max-w-3xl px-4 py-10">
           <div className="animate-pulse rounded-2xl border border-gray-100 bg-white p-8 shadow-lg">
-            <div className="mb-4 h-8 w-2/3 rounded-md bg-gray-200" />
+            <div className="mb-4 h-10 w-3/4 rounded-md bg-gray-200" />
             <div className="mb-2 flex gap-3">
               <div className="h-6 w-16 rounded-full bg-gray-100" />
               <div className="h-6 w-32 rounded-md bg-gray-100" />
             </div>
-            <div className="mt-8 space-y-3">
+            <div className="my-8 h-px bg-gray-100" />
+            <div className="space-y-3">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="h-4 w-full rounded-md bg-gray-100" />
               ))}
@@ -102,10 +120,19 @@ export default function PostDetailPage() {
   // ── Post content ──
   return (
     <div className="min-h-screen">
+      {/* Reading progress bar */}
+      <div
+        className="fixed top-0 left-0 z-20 h-1 rounded-r-full bg-gradient-to-r from-indigo-500 to-blue-500 transition-all duration-150 ease-out"
+        style={{ width: `${progress}%` }}
+      />
+
       {/* Navbar */}
       <header className="sticky top-0 z-10 border-b border-indigo-100/60 bg-white/75 shadow-sm backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5">
-          <Link href="/" className="flex items-center gap-2.5 text-xl font-bold text-gray-900">
+          <Link
+            href="/"
+            className="flex items-center gap-2.5 text-xl font-bold text-gray-900"
+          >
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-blue-500 text-base shadow-md shadow-indigo-500/20">
               ✍️
             </span>
@@ -113,28 +140,38 @@ export default function PostDetailPage() {
           </Link>
           <Link
             href="/"
-            className="text-sm text-gray-500 transition-colors duration-300 hover:text-indigo-600"
+            className="group inline-flex items-center gap-1.5 text-sm text-gray-500 transition-colors duration-300 hover:text-indigo-600"
           >
-            ← 返回首页
+            <span className="transition-transform duration-300 group-hover:-translate-x-1">
+              ←
+            </span>
+            返回首页
           </Link>
         </div>
       </header>
 
       <main className="mx-auto max-w-3xl px-4 py-10">
-        <article className="rounded-2xl border border-gray-100 bg-white p-8 shadow-lg shadow-gray-200/50">
+        <article className="rounded-2xl border border-gray-100 bg-white p-8 shadow-lg shadow-gray-200/50 sm:p-10">
           {/* Title */}
-          <h1 className="mb-4 text-3xl font-bold leading-snug text-gray-900 sm:text-4xl">
+          <h1 className="mb-6 text-3xl font-bold leading-tight text-gray-900 sm:text-4xl sm:leading-tight">
             {post!.title}
           </h1>
 
           {/* Meta row */}
-          <div className="mb-8 flex flex-wrap items-center gap-3 text-sm text-gray-400">
+          <div className="mb-8 flex flex-wrap items-center gap-4 text-sm">
+            {/* Category badge */}
             {post!.category_name && (
-              <span className="whitespace-nowrap rounded-full border border-indigo-100 bg-gradient-to-r from-indigo-50 to-blue-50 px-3 py-1 text-xs font-medium text-indigo-600">
-                {post!.category_name}
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-indigo-100 bg-gradient-to-r from-indigo-50 to-blue-50 px-3.5 py-1.5 text-xs font-semibold text-indigo-600">
+                📂 {post!.category_name}
               </span>
             )}
-            <span>
+
+            {/* Divider dot */}
+            <span className="hidden h-1 w-1 rounded-full bg-gray-300 sm:inline-block" />
+
+            {/* Date with calendar icon */}
+            <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-gray-400">
+              📅{" "}
               {new Date(post!.created_at).toLocaleDateString("zh-CN", {
                 year: "numeric",
                 month: "long",
@@ -143,22 +180,25 @@ export default function PostDetailPage() {
             </span>
           </div>
 
-          {/* Divider */}
-          <div className="mb-8 h-px bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100" />
+          {/* Decorative divider */}
+          <div className="mb-10 h-px bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100" />
 
-          {/* Content */}
-          <div className="prose prose-gray max-w-none leading-relaxed text-gray-700 whitespace-pre-wrap">
-            {post!.content}
+          {/* Article body — Markdown rendered with prose */}
+          <div className="prose prose-lg prose-indigo max-w-none prose-headings:font-bold prose-headings:text-gray-900 prose-p:leading-relaxed prose-p:text-gray-700 prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 prose-code:rounded-md prose-code:bg-gray-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:text-sm prose-code:font-normal prose-code:text-rose-600 prose-pre:rounded-xl prose-pre:bg-gray-900 prose-pre:shadow-lg prose-img:rounded-xl">
+            <ReactMarkdown>{post!.content}</ReactMarkdown>
           </div>
         </article>
 
         {/* Back button */}
-        <div className="mt-8 text-center">
+        <div className="mt-10 text-center">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-md shadow-indigo-500/25 transition-all duration-300 hover:from-indigo-700 hover:to-blue-700 hover:shadow-lg hover:scale-105"
+            className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-3 text-sm font-medium text-white shadow-md shadow-indigo-500/25 transition-all duration-300 hover:from-indigo-700 hover:to-blue-700 hover:shadow-lg hover:scale-105"
           >
-            ← 返回列表
+            <span className="text-base transition-transform duration-300 group-hover:-translate-x-1.5">
+              ←
+            </span>
+            返回列表
           </Link>
         </div>
       </main>
