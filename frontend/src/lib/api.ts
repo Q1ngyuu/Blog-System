@@ -84,12 +84,14 @@ async function request<T>(fn: () => Promise<{ data: ApiResponse<T> }>): Promise<
 export async function getPosts(
   q?: string,
   page?: number,
-  limit?: number
+  limit?: number,
+  categoryId?: number
 ): Promise<PaginatedPosts> {
   const params: Record<string, string | number> = {};
   if (q) params.q = q;
   if (page) params.page = page;
   if (limit) params.limit = limit;
+  if (categoryId) params.category_id = categoryId;
   return request(() => api.get("/api/posts", { params }));
 }
 

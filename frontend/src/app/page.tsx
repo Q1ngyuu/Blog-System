@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { motion, type Variants } from "framer-motion";
-import { getPosts, type PostListItem } from "@/lib/api";
+import { getPosts, getCategories, type PostListItem, type Category } from "@/lib/api";
 import EmptyState from "@/components/EmptyState";
 import SkeletonCard from "@/components/SkeletonCard";
 import SearchBar from "@/components/SearchBar";
@@ -36,14 +36,16 @@ export default function Home() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
 
   const PAGE_SIZE = 6;
 
-  const fetchPosts = useCallback(async (q?: string, p = 1) => {
+  const fetchPosts = useCallback(async (q?: string, p = 1, catId?: number | null) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getPosts(q, p, PAGE_SIZE);
+      const data = await getPosts(q, p, PAGE_SIZE, catId ?? undefined);
       setPosts(data.posts);
       setTotal(data.total);
       setTotalPages(data.totalPages);
@@ -55,6 +57,13 @@ export default function Home() {
     }
   }, []);
 
+  // Fetch categories on mount
+  useEffect(() => {
+    getCategories()
+      .then(setCategories)
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
@@ -63,15 +72,24 @@ export default function Home() {
     (q: string) => {
       setSearchQuery(q);
       setPage(1);
-      fetchPosts(q || undefined, 1);
+      fetchPosts(q || undefined, 1, activeCategoryId);
     },
-    [fetchPosts]
+    [fetchPosts, activeCategoryId]
   );
 
   const handlePageChange = useCallback(
     (p: number) => {
-      fetchPosts(searchQuery || undefined, p);
+      fetchPosts(searchQuery || undefined, p, activeCategoryId);
       window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    [fetchPosts, searchQuery, activeCategoryId]
+  );
+
+  const handleCategoryChange = useCallback(
+    (catId: number | null) => {
+      setActiveCategoryId(catId);
+      setPage(1);
+      fetchPosts(searchQuery || undefined, 1, catId);
     },
     [fetchPosts, searchQuery]
   );
@@ -112,6 +130,35 @@ export default function Home() {
               : "记录技术、生活与思考 ✨"}
           </p>
         </div>
+
+        {/* Category filter tabs */}
+        {categories.length > 0 && (
+          <div className="mb-8 flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => handleCategoryChange(null)}
+              className={`rounded-full px-5 py-2 text-sm font-medium transition-all duration-200 ${
+                activeCategoryId === null
+                  ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-500/25"
+                  : "border border-gray-200 bg-white text-gray-600 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
+              }`}
+            >
+              全部
+            </button>
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => handleCategoryChange(cat.id)}
+                className={`rounded-full px-5 py-2 text-sm font-medium transition-all duration-200 ${
+                  activeCategoryId === cat.id
+                    ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-500/25"
+                    : "border border-gray-200 bg-white text-gray-600 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
+                }`}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Loading skeleton */}
         {loading && <SkeletonCard variant="list-item" count={5} />}
