@@ -63,9 +63,10 @@ export default function AdminPage() {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<z.input<typeof postSchema>>({
     resolver: zodResolver(postSchema),
+    mode: "onBlur",
     defaultValues: { title: "", content: "", summary: "", category_id: "" },
   });
 
@@ -381,11 +382,15 @@ export default function AdminPage() {
                 </label>
                 <input
                   {...register("title")}
-                  className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm transition-all duration-200 placeholder:text-gray-300 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                  className={`w-full rounded-xl border px-3.5 py-2.5 text-sm transition-all duration-200 placeholder:text-gray-300 focus:outline-none focus:ring-2 ${
+                    errors.title
+                      ? "border-red-300 focus:border-red-400 focus:ring-red-100"
+                      : "border-gray-200 focus:border-indigo-400 focus:ring-indigo-100"
+                  }`}
                   placeholder="请输入文章标题"
                 />
                 {errors.title && (
-                  <p className="mt-1 text-xs text-red-500">
+                  <p className="mt-1 animate-fade-in-up text-xs text-red-500" style={{ opacity: 0 }}>
                     {errors.title.message}
                   </p>
                 )}
@@ -400,11 +405,15 @@ export default function AdminPage() {
                 <textarea
                   {...register("content")}
                   rows={6}
-                  className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm transition-all duration-200 placeholder:text-gray-300 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                  className={`w-full rounded-xl border px-3.5 py-2.5 text-sm transition-all duration-200 placeholder:text-gray-300 focus:outline-none focus:ring-2 ${
+                    errors.content
+                      ? "border-red-300 focus:border-red-400 focus:ring-red-100"
+                      : "border-gray-200 focus:border-indigo-400 focus:ring-indigo-100"
+                  }`}
                   placeholder="支持 Markdown 语法，使用 ## 创建标题，``` 创建代码块"
                 />
                 {errors.content && (
-                  <p className="mt-1 text-xs text-red-500">
+                  <p className="mt-1 animate-fade-in-up text-xs text-red-500" style={{ opacity: 0 }}>
                     {errors.content.message}
                   </p>
                 )}
@@ -434,7 +443,11 @@ export default function AdminPage() {
                 </label>
                 <select
                   {...register("category_id")}
-                  className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm transition-all duration-200 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                  className={`w-full rounded-xl border px-3.5 py-2.5 text-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
+                    errors.category_id
+                      ? "border-red-300 focus:border-red-400 focus:ring-red-100"
+                      : "border-gray-200 focus:border-indigo-400 focus:ring-indigo-100"
+                  }`}
                 >
                   <option value="">请选择分类</option>
                   {categories.map((c) => (
@@ -444,7 +457,7 @@ export default function AdminPage() {
                   ))}
                 </select>
                 {errors.category_id && (
-                  <p className="mt-1 text-xs text-red-500">
+                  <p className="mt-1 animate-fade-in-up text-xs text-red-500" style={{ opacity: 0 }}>
                     {errors.category_id.message}
                   </p>
                 )}
