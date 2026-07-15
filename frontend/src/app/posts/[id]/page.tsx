@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, notFound } from "next/navigation";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import { getPost, type PostDetail } from "@/lib/api";
@@ -10,7 +10,6 @@ export default function PostDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [post, setPost] = useState<PostDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // ── Reading progress ──
@@ -29,18 +28,20 @@ export default function PostDetailPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const [notFoundPost, setNotFoundPost] = useState(false);
+
   // ── Fetch post ──
   const fetchPost = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setNotFound(false);
+    setNotFoundPost(false);
     try {
       const data = await getPost(Number(id));
       setPost(data);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to load post";
       if (msg === "Post not found") {
-        setNotFound(true);
+        setNotFoundPost(true);
       } else {
         setError(msg);
       }
@@ -54,20 +55,8 @@ export default function PostDetailPage() {
   }, [fetchPost]);
 
   // ── 404 ──
-  if (!loading && notFound) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
-        <span className="text-7xl">🔍</span>
-        <h1 className="text-2xl font-bold text-gray-300">404</h1>
-        <p className="text-gray-500">文章不存在或已被删除</p>
-        <Link
-          href="/"
-          className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-md shadow-indigo-500/25 transition-all duration-300 hover:from-indigo-700 hover:to-blue-700 hover:shadow-lg hover:scale-105"
-        >
-          ← 返回首页
-        </Link>
-      </div>
-    );
+  if (!loading && notFoundPost) {
+    notFound();
   }
 
   // ── Error ──

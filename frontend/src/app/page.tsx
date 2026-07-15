@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { getPosts, type PostListItem } from "@/lib/api";
+import EmptyState from "@/components/EmptyState";
 
 export default function Home() {
   const [posts, setPosts] = useState<PostListItem[]>([]);
@@ -138,10 +139,12 @@ export default function Home() {
 
         {/* Empty */}
         {!loading && !error && posts.length === 0 && (
-          <div className="flex flex-col items-center gap-3 py-20">
-            <span className="text-5xl">📭</span>
-            <p className="text-gray-400">暂无文章，快去写一篇吧</p>
-          </div>
+          <EmptyState
+            icon="📝"
+            title="还没有文章"
+            description="暂时还没有发布任何文章，快去后台创作第一篇吧"
+            action={{ label: "去创作", href: "/admin" }}
+          />
         )}
       </main>
     </div>

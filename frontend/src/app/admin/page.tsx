@@ -15,6 +15,7 @@ import {
   type PostListItem,
   type Category,
 } from "@/lib/api";
+import EmptyState from "@/components/EmptyState";
 
 // ── Schema ──
 
@@ -329,21 +330,12 @@ export default function AdminPage() {
             </table>
           ) : (
             /* Empty state */
-            <div className="flex flex-col items-center py-16">
-              <span className="text-5xl">📭</span>
-              <h3 className="mt-4 text-lg font-semibold text-gray-700">
-                还没有文章
-              </h3>
-              <p className="mt-1 text-sm text-gray-400">
-                点击上方「新建文章」按钮，开始创作你的第一篇文章
-              </p>
-              <button
-                onClick={openCreateModal}
-                className="mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-md shadow-indigo-500/25 transition-all duration-300 hover:from-indigo-700 hover:to-blue-700 hover:shadow-lg hover:scale-105"
-              >
-                + 创建第一篇文章
-              </button>
-            </div>
+            <EmptyState
+              icon="📭"
+              title="还没有文章"
+              description="点击上方「新建文章」按钮，开始创作你的第一篇文章"
+              action={{ label: "+ 创建第一篇文章", onClick: openCreateModal }}
+            />
           )}
         </div>
       </main>
