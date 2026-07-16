@@ -13,15 +13,23 @@ export default function SearchBar({
 }: SearchBarProps) {
   const [value, setValue] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isFirstRender = useRef(true);
+  const userInteracted = useRef(false);
 
-  // Debounced search (skip initial mount)
+  // Only trigger search after user has typed (prevents onSearch on mount)
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setValue(e.target.value);
+    userInteracted.current = true;
+  };
+
+  const handleClear = () => {
+    setValue("");
+    userInteracted.current = true;
+    onSearch("");
+  };
+
+  // Debounced search — skip until user interacts
   useEffect(() => {
-    // Skip the initial render to avoid resetting restored page state
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
+    if (!userInteracted.current) return;
 
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
@@ -37,11 +45,6 @@ export default function SearchBar({
     };
   }, [value, onSearch]);
 
-  const handleClear = () => {
-    setValue("");
-    onSearch("");
-  };
-
   return (
     <div className="relative w-full max-w-xs">
       {/* Search icon */}
@@ -53,7 +56,7 @@ export default function SearchBar({
       <input
         type="text"
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={handleChange}
         placeholder={placeholder}
         className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2 pl-10 pr-9 text-sm text-gray-700 placeholder-gray-400 transition-all duration-200 focus:border-indigo-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100"
       />
