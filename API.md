@@ -1,6 +1,8 @@
 # Blog System API 文档
 
-Base URL: `http://localhost:3000`（开发）/ `https://你的域名.vercel.app`（生产）
+Base URL: `http://localhost:3000`（Next.js API Routes 开发）/ `http://localhost:5000`（Flask 后端开发）/ `https://你的域名.vercel.app`（Vercel 生产）
+
+> **双后端说明：** 项目提供两套 API 实现，接口格式完全一致。本地开发推荐使用 **Flask + SQLite**（端口 5000，数据持久化），Vercel 部署自动使用 **Next.js API Routes**（端口 3000，内存存储，冷启动后重置为种子数据）。
 
 所有接口统一返回格式：
 
@@ -25,7 +27,16 @@ Base URL: `http://localhost:3000`（开发）/ `https://你的域名.vercel.app`
 
 ```
 GET /api/posts
+GET /api/posts?q=关键词&page=1&limit=6
 ```
+
+**查询参数：**
+
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| `q` | string | ❌ | — | 搜索关键词，按标题/摘要/分类模糊匹配 |
+| `page` | number | ❌ | 1 | 页码 |
+| `limit` | number | ❌ | 100 | 每页数量 |
 
 **请求头：** 无需特殊设置
 
@@ -34,27 +45,33 @@ GET /api/posts
 ```json
 {
   "code": 0,
-  "data": [
-    {
-      "id": 8,
-      "title": "雨夜随想",
-      "summary": "一个安静的雨夜，一些零碎的感想",
-      "category_name": "随笔",
-      "created_at": "2026-07-15T10:30:00.000Z"
-    },
-    {
-      "id": 7,
-      "title": "学会断舍离",
-      "summary": "整理物品也是对内心的整理",
-      "category_name": "生活",
-      "created_at": "2026-07-15T10:29:00.000Z"
-    }
-  ],
+  "data": {
+    "posts": [
+      {
+        "id": 30,
+        "title": "从一个 Bug 学到的教训",
+        "summary": "一个简单的缩进错误让我 debug 了 3 个小时",
+        "category_name": "随笔",
+        "created_at": "2026-07-15T10:30:00.000Z"
+      },
+      {
+        "id": 29,
+        "title": "关于 AI 取代程序员的思考",
+        "summary": "Copilot 和 ChatGPT 让编程门槛降低，我们该何去何从？",
+        "category_name": "随笔",
+        "created_at": "2026-07-15T10:29:00.000Z"
+      }
+    ],
+    "total": 30,
+    "page": 1,
+    "limit": 6,
+    "totalPages": 5
+  },
   "message": "success"
 }
 ```
 
-**说明：** 按创建时间倒序排列，不返回正文内容。
+**说明：** 按创建时间倒序排列，不返回正文内容。支持分页和模糊搜索。
 
 ---
 
@@ -139,7 +156,7 @@ Content-Type: application/json
   "data": {
     "id": 9,
     "title": "我的新文章",
-    "summary": "文章摘要（可选）",
+    "summary": "文章摘要",
     "category_name": "技术",
     "created_at": "2026-07-15T12:00:00.000Z",
     "updated_at": "2026-07-15T12:00:00.000Z"
@@ -281,7 +298,8 @@ GET /api/categories
   "data": [
     { "id": 1, "name": "技术" },
     { "id": 2, "name": "生活" },
-    { "id": 3, "name": "随笔" }
+    { "id": 3, "name": "随笔" },
+    { "id": 4, "name": "前端" }
   ],
   "message": "success"
 }
@@ -376,9 +394,14 @@ GET /api/health
 
 ## cURL 测试示例
 
+> 本地开发时可将 `:3000` 替换为 `:5000` 使用 Flask 后端 API。
+
 ```bash
 # 获取文章列表
 curl http://localhost:3000/api/posts
+
+# 获取文章列表（分页 + 搜索）
+curl "http://localhost:3000/api/posts?page=1&limit=6&q=Python"
 
 # 获取文章详情
 curl http://localhost:3000/api/posts/1
