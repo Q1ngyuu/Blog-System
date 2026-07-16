@@ -2,6 +2,8 @@ node_modules/
 .env
 __pycache__/
 *.db
+!backend/blog.db
+instance/
 .vscode/
 .next/
 dist/

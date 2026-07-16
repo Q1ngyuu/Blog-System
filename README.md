@@ -24,15 +24,16 @@
 | 层级 | 技术 |
 |------|------|
 | 框架 | Next.js 16 (App Router + Turbopack) |
-| 语言 | TypeScript |
+| 后端 | Flask + SQLAlchemy |
+| 数据库 | SQLite (`backend/blog.db`) |
+| 语言 | TypeScript + Python |
 | 样式 | Tailwind CSS 4 + @tailwindcss/typography |
 | 动画 | framer-motion |
 | 通知 | react-hot-toast |
 | Markdown | react-markdown |
 | 表单 | React Hook Form + Zod |
 | HTTP | Axios |
-| API | Next.js API Routes（替代 Flask） |
-| 部署 | Vercel |
+| 部署 | Vercel + Railway |
 
 ## 项目结构
 
@@ -65,10 +66,15 @@ blog-system/
 │   ├── next.config.ts
 │   ├── package.json
 │   └── vercel.json
-└── backend/                        # Flask 后端（可选，已不再使用）
+└── backend/                        # Flask 后端
     ├── app.py
     ├── models.py
+    ├── extensions.py
+    ├── blog.db                     # SQLite 数据库（含种子数据）
     ├── routes/
+    │   ├── posts.py
+    │   └── categories.py
+    ├── seed.py                     # 数据库种子脚本
     └── requirements.txt
 ```
 
@@ -77,11 +83,30 @@ blog-system/
 ### 环境要求
 
 - **Node.js >= 20.9.0**
+- **Python >= 3.10**
 
-### 安装运行
+### 1. 后端（Flask + SQLite）
 
 ```bash
-# 进入前端目录
+cd backend
+
+# 创建虚拟环境并安装依赖
+python -m venv venv
+./venv/Scripts/pip install -r requirements.txt   # Windows
+# source venv/bin/pip install -r requirements.txt # macOS/Linux
+
+# 启动 Flask 开发服务器
+./venv/Scripts/python app.py   # Windows
+# venv/bin/python app.py       # macOS/Linux
+```
+
+Flask 运行在 `http://localhost:5000`。
+
+> **数据库说明：** 项目自带 `backend/blog.db` SQLite 数据库文件，包含 3 个分类和 8 篇种子文章。克隆后可直接使用，无需额外配置数据库。如需重新生成种子数据，运行 `./venv/Scripts/python seed.py`。
+
+### 2. 前端（Next.js）
+
+```bash
 cd frontend
 
 # 安装依赖
@@ -92,8 +117,6 @@ npm run dev
 ```
 
 浏览器打开 `http://localhost:3000` 即可访问。
-
-**前后端都在同一个进程中运行**，无需额外启动 Flask 或配置环境变量。
 
 ### API 接口
 
@@ -145,13 +168,13 @@ npm run dev
 
 > **注意：** 当前数据存储在内存中，服务冷启动后会重置为初始种子数据。如需持久化，可在 Vercel Dashboard 添加 **Vercel KV** 或 **Vercel Postgres**（免费额度足够个人项目使用）。
 
-### Railway / Render（使用 Flask 后端）
+### Railway / Render（推荐用于 Flask + SQLite 部署）
 
-如需使用 Flask 后端 + PostgreSQL：
+使用 Flask 后端部署：
 
-1. 在项目根目录部署
+1. 在项目根目录部署，设置 Root Directory 为 `backend`
 2. 构建命令：`pip install -r requirements.txt`
-3. 启动命令：`cd backend && gunicorn app:app --bind 0.0.0.0:$PORT`
+3. 启动命令：`gunicorn app:app --bind 0.0.0.0:$PORT`
 4. 环境变量：
 
 | Key | Value |
@@ -163,6 +186,8 @@ npm run dev
 
 ## 本地开发说明
 
-- **数据存储：** 开发时数据存储在内存中，每次重启服务会恢复为 8 篇种子文章和 3 个分类
-- **热更新：** `npm run dev` 支持前端页面和 API 路由的热更新
-- **构建生产版本：** `npm run build` 后 `npm start` 启动生产模式
+- **数据存储：** 使用 SQLite 数据库（`backend/blog.db`），数据持久化保存，重启服务不会丢失
+- **数据库位置：** `backend/blog.db`，已提交到 Git 仓库，克隆即可使用
+- **种子数据：** 包含 3 个分类（技术/生活/随笔/前端）和 8 篇 Markdown 文章
+- **重建数据库：** 删除 `backend/blog.db` 后运行 `cd backend && ./venv/Scripts/python seed.py`
+- **热更新：** Flask `debug=True` 支持自动重载，Next.js Turbopack 支持 HMR
