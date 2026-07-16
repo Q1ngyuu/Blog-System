@@ -6,12 +6,16 @@ from extensions import db
 
 load_dotenv()
 
+basedir = os.path.abspath(os.path.dirname(__file__))
+
 app = Flask(__name__)
 
 # --- Config ---
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY") or "dev-key-change-in-production"
 
-database_url = os.getenv("DATABASE_URL", "sqlite:///blog.db")
+database_url = os.getenv("DATABASE_URL")
+if not database_url:
+    database_url = "sqlite:///" + os.path.join(basedir, "blog.db")
 # Railway provides postgres:// but SQLAlchemy needs postgresql://
 if database_url and database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
